@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Using jQuery to Get JSON Data</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+
+
+<select name="city" id="city">
+</select>
+
+<select name="address" id="address">
+</select>
+
+<body>
+
+<script>
+$(document).ready(function() {
+  $('#address').hide()
+  // Make a GET request to retrieve JSON data for provinces
+  $.getJSON('province.json', function(data) {
+    console.log(data);
+
+    // Find the province named 'Laguna'
+    var lagunaData = data.find(function(province) {
+      return province.province_name && province.province_name.toLowerCase() === 'laguna';
+    });
+
+    // Check if 'Laguna' data exists
+    if (lagunaData) {
+      var provincecode = lagunaData.province_code;
+      $.getJSON('city.json', function(city) {
+        var LagunaCities = [];
+
+        // Find cities matching the Laguna province code
+        city.forEach(function(cities) {
+          if (cities.province_code && cities.province_code.toLowerCase() === provincecode.toLowerCase()) {
+            LagunaCities.push(cities);
+          }
+        });
+
+
+        // Populate the select element with LagunaCities
+        var selectElement = $('#city');
+        LagunaCities.forEach(function(city) {
+          selectElement.append(`<option value="${city.city_code}">${city.city_name}</option>`);
+        });
+
+        $('#city').change(function(){
+          $('#address').show()
+          var selectedProvince = ($(this).val())
+
+          $.getJSON('barangay.json', function(barangays) {
+            var barangayAddress = [];
+
+            // Find cities matching the Laguna province code
+            barangays.forEach(function(barangay) {
+
+              // console.log(barangay)
+              if (barangay.city_code && barangay.city_code.toLowerCase() === selectedProvince.toLowerCase()) {
+                barangayAddress.push(barangay);
+              }
+            });
+
+            // console.log(barangayAddress)
+            
+            var addressElement = $('#address');
+            addressElement.empty()
+            barangayAddress.forEach(function(barangay) {
+              addressElement.append(`<option value="${barangay.brgy_name}">${barangay.brgy_name}</option>`);
+            });
+          })
+
+
+        })
+
+
+
+      });
+    } else {
+      console.log("Laguna data not found");
+    }
+
+  }).fail(function(jqXHR, textStatus, error) {
+    // Handling errors if the request fails
+    console.log("Request failed: " + textStatus + ", " + error);
+  });
+});
+
+</script>
+
+</body>
+</html>

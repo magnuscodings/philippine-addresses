@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Using jQuery to Get JSON Data</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+<select name="city" id="city"></select>
+<select name="address" id="address"></select>
+
+<script>
+$(document).ready(function() {
+  $('#address').hide();
+
+  function populateCitiesAndAddresses(provinceCode) {
+    $.getJSON('city.json', function(cities) {
+      var filteredCities = cities.filter(function(city) {
+        return city.province_code.toLowerCase() === provinceCode.toLowerCase();
+      });
+
+      var selectCity = $('#city');
+      selectCity.empty();
+      filteredCities.forEach(function(city) {
+        selectCity.append(`<option value="${city.city_code}">${city.city_name}</option>`);
+      });
+
+      $('#city').change(function(){
+        $('#address').show();
+        var selectedCity = $(this).val();
+
+        $.getJSON('barangay.json', function(barangays) {
+          var filteredBarangays = barangays.filter(function(barangay) {
+            return barangay.city_code.toLowerCase() === selectedCity.toLowerCase();
+          });
+
+          var selectAddress = $('#address');
+          selectAddress.empty();
+          filteredBarangays.forEach(function(barangay) {
+            selectAddress.append(`<option value="${barangay.brgy_name}">${barangay.brgy_name}</option>`);
+          });
+        });
+      });
+    });
+  }
+
+  $.getJSON('province.json', function(data) {
+    var lagunaData = data.find(function(province) {
+      return province.province_name && province.province_name.toLowerCase() === 'laguna';
+    });
+
+    if (lagunaData) {
+      var provinceCode = lagunaData.province_code;
+      populateCitiesAndAddresses(provinceCode);
+    } else {
+      console.log("Laguna data not found");
+    }
+  }).fail(function(jqXHR, textStatus, error) {
+    console.log("Request failed: " + textStatus + ", " + error);
+  });
+});
+</script>
+
+</body>
+</html>
